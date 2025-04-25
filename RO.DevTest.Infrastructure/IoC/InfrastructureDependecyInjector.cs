@@ -25,6 +25,7 @@ public static class InfrastructureDependecyInjector {
             .AddDefaultTokenProviders();
 
         services.AddScoped<IIdentityAbstractor, IdentityAbstractor>();
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }
