@@ -4,6 +4,7 @@ using RO.DevTest.Application.Contracts.Infrastructure;
 using RO.DevTest.Domain.Entities;
 using RO.DevTest.Infrastructure.Abstractions;
 using RO.DevTest.Persistence;
+using RO.DevTest.Persistence.Services;
 
 namespace RO.DevTest.Infrastructure.IoC;
 
@@ -26,6 +27,7 @@ public static class InfrastructureDependecyInjector {
 
         services.AddScoped<IIdentityAbstractor, IdentityAbstractor>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
 
         return services;
     }
