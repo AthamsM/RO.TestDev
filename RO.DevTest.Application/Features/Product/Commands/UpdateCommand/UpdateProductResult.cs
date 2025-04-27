@@ -1,1 +1,0 @@
-public record UpdateProductResult(string Name, float Price, int Stock, string Description){}
