@@ -7,9 +7,11 @@ namespace RO.DevTest.Application.Features.Auth.Commands.LoginCommand;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse> {
     private readonly IIdentityAbstractor _identityAbstractor;
+    private readonly ITokenService _tokenService;
 
-    public LoginCommandHandler(IIdentityAbstractor identityAbstractor){
+    public LoginCommandHandler(IIdentityAbstractor identityAbstractor, ITokenService tokenService){
         _identityAbstractor = identityAbstractor;
+        _tokenService = tokenService;
     }
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken) {
         // verfic if user exist wiht email
@@ -26,11 +28,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse> 
 
         var role = await _identityAbstractor.GetUserRolesAsync(user);
         
-        // generet token
-        string accessToken = "teste-access-token";
-        string refreshToken = "teste-refresh-token";
-
         var now = DateTime.UtcNow;
+        var accessToken = _tokenService.GenerateAccessToken(user, role);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+
         var reponse = new LoginResponse{
             AccessToken = accessToken,
             RefreshToken = refreshToken,
