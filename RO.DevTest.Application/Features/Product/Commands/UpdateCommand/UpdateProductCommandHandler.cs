@@ -1,11 +1,11 @@
 using MediatR;
 using RO.DevTest.Domain.Exception;
 
-public class UpdateProductCommandHandle(IProductRepository productRepository) : IRequestHandler<UpdateProductCommand, UpdateProductResult>
+public class UpdateProductCommandHandle(IProductRepository productRepository) : IRequestHandler<UpdateProductCommand, Unit>
 {
     private readonly IProductRepository _productRepository = productRepository;
 
-    public Task<UpdateProductResult> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         var product = _productRepository.Get(p => p.Id == request.Id);
         if(product == null){
@@ -15,7 +15,7 @@ public class UpdateProductCommandHandle(IProductRepository productRepository) : 
         product.Price = request.Price;
         product.Stock = request.Stock;
         product.Description = request.Description;
-        _productRepository.Update(product);
-        return Task.FromResult(new UpdateProductResult(product.Name, product.Price, product.Stock, product.Description));
+        await _productRepository.Update(product);
+        return Unit.Value;
     }
 }
