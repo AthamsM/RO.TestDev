@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <Style>
+        #flex{
+            display: flex;
+        }
+        a{
+            text-decoration: none;
+        }
+        #close-modal-create{
+            color: red;
+            font-family:cursive;
+            cursor: pointer;
+        }
+        #modal-create {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 20%;
+            height: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        #modal-create-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </Style>
+</head>
+<body>
+    <div class="flex" style="margin: 10px; font-size: 28px;">
+        <a href="produtosAdmin.html" >produto |</a>
+        <a href="sale.html">vendas</a>
+    </div>
+    <div id="modal-create-overlay"></div>
+    <div id="modal-create">
+        <div id="flex">
+            <div>
+                <h3>Criar Produto</h3>
+                <label for="name-">Nome:</label>
+                <input type="text" id="name"/>
+                <label for="price">Preço:</label>
+                <input type="number" id="price"/>
+                <label for="description">Descrição:</label>
+                <input type="text" id="description"/>
+                <label for="stock">Estoque:</label>
+                <input type="number" id="stock"/>
+                <button id="confirm">Criar</button>
+                <p id="message-create" ></p> 
+            </div>
+            <a id="close-modal-create">X</a>
+        </div>
+    </div>
+    <h2 style="margin: 46px 0px 46px 10px;">Administração de Produtos</h2>
+    <p style="margin: 10px;">Adicionar produto <button id="create">+</button></p>
+    <iframe src="produtos.html" style="width: 100%; height: 500px; border: none;"></iframe>
+    <script>
+        document.getElementById("create").onclick = () => openModalCreate();
+
+        function openModalCreate() {
+            const modal_admin = document.getElementById("modal-create");
+            const modal_adminOverlay = document.getElementById("modal-create-overlay");
+
+            document.getElementById("name").value = "";
+            document.getElementById("price").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("stock").value = "";
+
+            modal_admin.style.display = "block";
+            modal_adminOverlay.style.display = "block";
+            
+            document.getElementById("confirm").onclick = () => {
+                const name = document.getElementById("name").value;
+                const price = parseFloat(document.getElementById("price").value);
+                const description = document.getElementById("description").value;
+                const stock = parseInt(document.getElementById("stock").value); 
+
+                created(name, price, stock, description);
+            };
+            document.getElementById("close-modal-create").onclick = closeModalCreate;
+        }
+        async function created( name, price, stock, description) {
+            try {
+                const resp = await fetch("http://localhost:5087/api/products", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") },
+                    body: JSON.stringify({ name, price, stock, description })
+                });
+
+                const message = document.getElementById("message-create");
+
+                if (resp.ok) {
+                    message.textContent = "Criação feita com sucesso!";
+                    message.style.color = "green";
+                    await wait(2000)
+                    window.location.href = "produtosAdmin.html";
+                } else {
+                    const errorData = await resp.json();
+                    message.textContent = `Erro: ${errorData.message || "Erro desconhecido"}`;
+                    message.style.color = "red";
+                }
+            } catch (error) {
+                console.error("Erro na requisição:", error);
+                const message = document.getElementById("message");
+                message.textContent = `Erro: ${error.message}`;
+                message.style.color = "red";
+            }
+        }
+        function closeModalCreate() {
+            const modal = document.getElementById("modal-create");
+            const modalOverlay = document.getElementById("modal-create-overlay");
+            modal.style.display = "none";
+            modalOverlay.style.display = "none";
+        }
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

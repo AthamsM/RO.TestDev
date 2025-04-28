@@ -1,0 +1,1 @@
+public record GetProductResult(Guid Id, string Name, float Price, int Stock, string Description){}
