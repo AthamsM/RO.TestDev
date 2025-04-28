@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <style>
+    #login{
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 20%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 25px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label>Email:</label><br />
+      <input type="email" id="email" required style="margin: 2px;"/><br /><br />
+
+      <label>Senha:</label><br />
+      <input type="password" id="password" required /><br /><br />
+
+      <button type="submit" style="cursor: pointer;">Entrar</button><br /><br />
+    </form>
+      <button><a href="register.html" style="text-decoration: none; color: #000;;">Cadastrar</a></button>
+
+    <p id="message"></p>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

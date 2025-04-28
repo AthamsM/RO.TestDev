@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #product-list{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            overflow-x: scroll;
+            overflow-y:auto;
+        }
+        #flex{
+            display: flex;
+        }
+        a{
+            text-decoration: none;
+        }
+        #close-modal{
+            color: red;
+            font-family:cursive;
+            cursor: pointer;
+        }
+        #close-modal-admin{
+            color: red;
+            font-family:cursive;
+            cursor: pointer;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        #modal-admin {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 20%;
+            height: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        #modal-admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="margin-left: 40px;">Produtos</h3>
+    <div id="product-list"></div>
+    <div id="modal-overlay"></div>
+    <div id="modal">
+        <div id="flex">
+            <div>
+                <h3 id="modal-title"></h3>
+                <label for="quantity">Quantidade:</label>
+                <input type="number" id="quantity" min="1" />
+                <button id="calculate">Calcular Preço</button>
+                <p id="calculated-price"></p>
+                <button id="sale">Comprar</button>
+                <p id="message" ></p> 
+            </div>
+            <a id="close-modal">X</a>
+        </div>
+    </div>
+    <div id="modal-admin-overlay"></div>
+    <div id="modal-admin">
+        <div id="flex">
+            <div>
+                <h3 id="modal-admin-title"></h3>
+                <label for="name-update">Nome:</label>
+                <input type="text" id="name-update"/>
+                <label for="price-update">Preço:</label>
+                <input type="number" id="price-update"/>
+                <label for="description-update">Descrição:</label>
+                <input type="text" id="description-update"/>
+                <label for="quantity-update">Quantidade:</label>
+                <input type="number" id="quantity-update"/>
+                <button id="update">Atualizar</button>
+                <button id="delete">Apagar</button>
+                <p id="message-admin" ></p> 
+            </div>
+            <a id="close-modal-admin">X</a>
+        </div>
+    </div>
+
+<script>
+    async function loadProducts() {
+        try {
+            const response = await fetch("http://localhost:5087/api/products");
+            const products = await response.json();
+
+            const productList = document.getElementById("product-list");
+            productList.innerHTML = "";
+
+            products.forEach(product => {
+                const productDiv = document.createElement("div");
+                productDiv.innerHTML = `
+                    <div style = "border: 2px solid; border-radius: 10px; width: 300px; height: 200px; margin: 20px 10px 10px 30px ">
+                        <div style= "margin: 10px">
+                            <h3>${product.name}</h3>
+                            <p>Preço: R$ ${product.price}</p>
+                            <p>Descrição: ${product.description}</p>
+                            <p>Quantidade: ${product.stock}</p>
+                            </div>
+                    </div>
+                `;
+                const decodedPayload = parseJwt();
+                const userRole = decodedPayload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
+                if(userRole == "Admin"){
+                    productDiv.addEventListener("click", () => openModalAdmin(product));
+                }else{
+                    productDiv.addEventListener("click", () => openModal(product));
+                }
+                productList.appendChild(productDiv);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar produtos:", error);
+        }
+    }
+
+    function openModal(product) {
+        const modal = document.getElementById("modal");
+        const modalOverlay = document.getElementById("modal-overlay");
+
+        document.getElementById("modal-title").innerText = `Produto: ${product.name}`;
+        document.getElementById("quantity").value = "";
+        document.getElementById("calculated-price").innerText = "";
+
+        modal.style.display = "block";
+        modalOverlay.style.display = "block";
+
+        document.getElementById("calculate").onclick = () => {
+            const quantity = parseInt(document.getElementById("quantity").value);
+            if (quantity > 0) {
+                const price = quantity * product.price;
+                document.getElementById("calculated-price").innerText = `Preço total: R$ ${price.toFixed(2)}`;
+            } else {
+                alert("Por favor, informe uma quantidade válida.");
+            }
+        };
+        const productId = product.id;
+
+        document.getElementById("sale").onclick = () => {
+        const quantity = parseInt(document.getElementById("quantity").value);
+            if (quantity > 0) {
+                sale(productId, quantity); // Chama a função com o ID do produto e a quantidade
+            } else {
+                alert("Por favor, informe uma quantidade válida antes de finalizar a venda.");
+            }
+        };
+        document.getElementById("close-modal").onclick = closeModal;
+    }
+    function openModalAdmin(product) {
+        const modal_admin = document.getElementById("modal-admin");
+        const modal_adminOverlay = document.getElementById("modal-admin-overlay");
+
+        document.getElementById("name-update").value = product.name;
+        document.getElementById("modal-admin-title").innerText = `Produto: ${product.name}`;
+        document.getElementById("price-update").value = product.price;
+        document.getElementById("description-update").value = product.description;
+        document.getElementById("quantity-update").value = product.stock;
+
+        modal_admin.style.display = "block";
+        modal_adminOverlay.style.display = "block";
+        const id = product.id;
+        
+
+        document.getElementById("update").onclick = () => {
+            const name = document.getElementById("name-update").value;
+            const price = parseFloat(document.getElementById("price-update").value); // Certifica-se que é número
+            const description = document.getElementById("description-update").value;
+            const stock = parseInt(document.getElementById("quantity-update").value); // Certifica-se que é número
+
+            update(id, name, price, stock, description);
+        };
+        document.getElementById("delete").onclick = () => {
+            deleted(id);
+        };
+        document.getElementById("close-modal-admin").onclick = closeModalAdmin;
+    }
+   
+    
+    async function sale(productId, quantity) {
+        const decodedPayload = parseJwt();
+        userId = decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+        console.log("ID do usuário:", userId);
+        try {
+            const resp = await fetch("http://localhost:5087/api/sale", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId, userId, quantity })
+            });
+
+            const message = document.getElementById("message");
+
+            if (resp.ok) {
+                message.textContent = "Compra feita com sucesso!";
+                message.style.color = "green";
+                await wait(3000)
+                window.location.href = "produtos.html";
+            } else {
+                const errorData = await resp.json(); // Obter detalhes do erro
+                message.textContent = `Erro: ${errorData.message || "Erro desconhecido"}`;
+                message.style.color = "red";
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            const message = document.getElementById("message");
+            message.textContent = `Erro: ${error.message}`;
+            message.style.color = "red";
+        }
+    }
+    async function update(id, name, price, stock, description) {
+        try {
+            const resp = await fetch("http://localhost:5087/api/products", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") },
+                body: JSON.stringify({ id, name, price, stock, description })
+            });
+
+            const message = document.getElementById("message-admin");
+
+            if (resp.ok) {
+                message.textContent = "Atualização feita com sucesso!";
+                message.style.color = "green";
+                await wait(3000)
+                window.location.href = "produtosAdmin.html";
+            } else {
+                const errorData = await resp.json();
+                message.textContent = `Erro: ${errorData.message || "Erro desconhecido"}`;
+                message.style.color = "red";
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            const message = document.getElementById("message");
+            message.textContent = `Erro: ${error.message}`;
+            message.style.color = "red";
+        }
+    }
+    async function deleted(id) {
+        try {
+            const resp = await fetch("http://localhost:5087/api/products", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + localStorage.getItem("accessToken") },
+                body: JSON.stringify({ id })
+            });
+
+            const message = document.getElementById("message-admin");
+
+            if (resp.ok) {
+                message.textContent = "Deletado com sucesso!";
+                message.style.color = "green";
+                await wait(3000)
+                window.location.href = "produtosAdmin.html";
+            } else {
+                const errorData = await resp.json();
+                message.textContent = `Erro: ${errorData.message || "Erro desconhecido"}`;
+                message.style.color = "red";
+            }
+        } catch (error) {
+            console.error("Erro na requisição:", error);
+            const message = document.getElementById("message");
+            message.textContent = `Erro: ${error.message}`;
+            message.style.color = "red";
+        }
+    }
+    function closeModal() {
+        const modal = document.getElementById("modal");
+        const modalOverlay = document.getElementById("modal-overlay");
+        modal.style.display = "none";
+        modalOverlay.style.display = "none";
+    }
+    function closeModalAdmin() {
+        const modal = document.getElementById("modal-admin");
+        const modalOverlay = document.getElementById("modal-admin-overlay");
+        modal.style.display = "none";
+        modalOverlay.style.display = "none";
+    }
+    function wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function parseJwt(){
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+            try {
+                const payloadBase64 = token.split(".")[1];
+                const decoded = JSON.parse(atob(payloadBase64));
+                return decoded;
+            } catch (error) {
+                console.error("Erro ao decodificar o token:", error);
+                return;
+            }
+        } else {
+            console.log("Nenhum token encontrado no localStorage.");
+            return;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadProducts);
+</script>
+
+</body>
+</html>
